@@ -32,24 +32,10 @@ final class DragWatcher {
     private var checkedChangeCount = -1
     private var dragHasFiles = false
 
-    init(state: AppState) {
+    /// `onDrop` is called when files are dropped on a wheel segment.
+    init(state: AppState, onDrop: @escaping (WheelSegment, [URL]) -> Void) {
         self.state = state
-        self.panel = WheelPanel { segment, urls in
-            state.dropCount += 1
-            state.lastDrop = .init(date: Date(), segment: segment, urls: urls)
-            state.working = true
-            appLog.notice("\(segment.title, privacy: .public): \(urls.count) file(s)")
-            let action = segment.action
-            Task {
-                let result = await BatchRunner.run(action, on: urls) // runs off the main thread
-                state.working = false
-                state.lastResult = result
-                appLog.notice("\(result.summary, privacy: .public) in \(result.seconds, format: .fixed(precision: 2)) s")
-                print("Notchwheel \(segment.title): \(result.summary) in \(String(format: "%.2f", result.seconds)) s")
-                result.failures.forEach { print("  failed: \($0.input.lastPathComponent): \($0.reason)") }
-                NSSound(named: result.outputs.isEmpty ? "Basso" : "Pop")?.play()
-            }
-        }
+        self.panel = WheelPanel(onDrop: onDrop)
     }
 
     func start() {

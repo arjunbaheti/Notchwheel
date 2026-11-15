@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 @main
 struct NotchwheelApp: App {
@@ -18,19 +19,40 @@ struct NotchwheelApp: App {
     }
 }
 
-/// Starts the drag watcher once the app has launched.
+/// Starts the drag watcher once the app has launched, and runs each drop through the image engine,
+/// reporting progress and the result in the notch pill.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let state = AppState()
     private var watcher: DragWatcher?
+    private let pill = NotchPill()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let watcher = DragWatcher(state: state)
+        let watcher = DragWatcher(state: state) { [weak self] segment, urls in
+            self?.process(urls, with: segment)
+        }
         watcher.start()
         self.watcher = watcher
     }
+
+    private func process(_ urls: [URL], with segment: WheelSegment) {
+        state.dropCount += 1
+        state.lastDrop = .init(date: Date(), segment: segment, urls: urls)
+        state.working = true
+        pill.showWorking(segment.progressText(fileCount: urls.count))
+        appLog.notice("\(segment.title, privacy: .public): \(urls.count) file(s)")
+        let action = segment.action
+        Task {
+            let result = await BatchRunner.run(action, on: urls)   // runs off the main thread
+            state.working = false
+            state.lastResult = result
+            pill.showResult(result)
+            appLog.notice("\(result.summary, privacy: .public) in \(result.seconds, format: .fixed(precision: 2)) s")
+            NSSound(named: result.outputs.isEmpty ? "Basso" : "Pop")?.play()
+        }
+    }
 }
 
-/// What the menu bar menu shows. Until the notch pill (Milestone 4), results show up here.
+/// What the menu bar menu shows: the last result, as a backup to the notch pill.
 struct MenuContent: View {
     var state: AppState
 

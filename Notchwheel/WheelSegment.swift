@@ -32,6 +32,16 @@ enum WheelSegment: Int, CaseIterable, Identifiable {
         }
     }
 
+    /// Shown in the notch pill while a batch runs, e.g. "Converting 3 files to JPG…".
+    func progressText(fileCount n: Int) -> String {
+        let files = "\(n) file\(n == 1 ? "" : "s")"
+        switch self {
+        case .compress: return "Compressing \(files)…"
+        case .toJPG, .toPNG, .toHEIC: return "Converting \(files) to \(title)…"
+        case .resize: return "Resizing \(files)…"
+        }
+    }
+
     /// One-line summary shown in the middle of the wheel while hovering.
     var detail: String {
         switch self {

@@ -30,5 +30,5 @@ technical approach and the milestone plan. Don't build P1/P2 items unless asked.
 - [x] Milestone 1: spike the gesture — drop from a mid-drag panel works; no permissions needed (polling, see `DragWatcher.swift`)
 - [x] Milestone 2: wheel UI — five segments, hover highlight, centre-hole/outside cancel; hit-test tests in `NotchwheelTests`
 - [x] Milestone 3: image engine — `FileAction` + `ImageEngine` (ImageIO), `BatchRunner`; tests in `ImageEngineTests`; results shown in the menu bar menu until the pill exists
-- [ ] Milestone 4: notch pill
+- [x] Milestone 4: notch pill — `NotchPill.swift` (panel above the menu bar, centred on the notch via `auxiliaryTopLeft/RightArea`; top-centre fallback); geometry tests in `NotchPillTests`
 - [ ] Milestone 5: polish and package
