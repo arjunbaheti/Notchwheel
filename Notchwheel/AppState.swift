@@ -19,4 +19,7 @@ final class AppState {
     var watching = false
     var dropCount = 0
     var lastDrop: Drop?
+    /// True while a batch is processing.
+    var working = false
+    var lastResult: BatchResult?
 }

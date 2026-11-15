@@ -30,20 +30,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-/// What the menu bar menu shows. For now: the last drop, so a test can confirm the right segment.
+/// What the menu bar menu shows. Until the notch pill (Milestone 4), results show up here.
 struct MenuContent: View {
     var state: AppState
 
     var body: some View {
-        Text(state.watching ? "Hold ⌥ while dragging files" : "Starting…")
+        Text(state.watching ? "Hold ⌥ while dragging images" : "Starting…")
         if let drop = state.lastDrop {
             Divider()
-            Text("Drop #\(state.dropCount): \(drop.segment.title) · \(drop.urls.count) file\(drop.urls.count == 1 ? "" : "s") at \(drop.date.formatted(date: .omitted, time: .standard))")
-            ForEach(drop.urls.prefix(5), id: \.self) { url in
-                Text(url.lastPathComponent)
-            }
-            if drop.urls.count > 5 {
-                Text("…and \(drop.urls.count - 5) more")
+            if state.working {
+                Text("\(drop.segment.title): working on \(drop.urls.count) file\(drop.urls.count == 1 ? "" : "s")…")
+            } else if let result = state.lastResult {
+                Text("\(drop.segment.title): \(result.summary)")
+                Text("Took \(result.seconds, format: .number.precision(.fractionLength(2))) s at \(drop.date.formatted(date: .omitted, time: .shortened))")
+                ForEach(Array(result.failures.prefix(3).enumerated()), id: \.offset) { _, failure in
+                    Text("Failed: \(failure.input.lastPathComponent) (\(failure.reason))")
+                }
+                if !result.outputs.isEmpty {
+                    Button("Show in Finder") {
+                        NSWorkspace.shared.activateFileViewerSelecting(result.outputs)
+                    }
+                }
             }
         }
         Divider()
