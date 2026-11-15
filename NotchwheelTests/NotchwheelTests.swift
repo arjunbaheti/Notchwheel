@@ -47,4 +47,19 @@ struct WheelGeometryTests {
         #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 10, radius: WheelGeometry.innerRadius - 1)) == nil)
         #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 10, radius: WheelGeometry.outerRadius + 1)) == nil)
     }
+
+    /// Compress spans -36°…36°. Resting just past its edge must not flip the highlight back and forth.
+    @Test func highlightIsStickyNearBoundaries() {
+        let justPastEdge = point(clockwiseFromTop: 39)            // 3° into JPG
+        #expect(WheelGeometry.segment(at: justPastEdge) == .toJPG)
+        #expect(WheelGeometry.segment(at: justPastEdge, keeping: .compress) == .compress)
+        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 50), keeping: .compress) == .toJPG)
+        // Wrap-around: Compress also stays highlighted just past its left edge.
+        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 320), keeping: .compress) == .compress)
+        // Radially: a little outside the ring keeps it, well outside lets go.
+        let edge = WheelGeometry.outerRadius
+        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 0, radius: edge + 4), keeping: .compress) == .compress)
+        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 0, radius: edge + 20), keeping: .compress) == nil)
+        #expect(WheelGeometry.segment(at: .zero, keeping: .compress) == nil)  // centre hole
+    }
 }

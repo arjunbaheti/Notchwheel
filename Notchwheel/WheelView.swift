@@ -21,21 +21,26 @@ struct WheelView: View {
         ZStack {
             ForEach(WheelSegment.allCases) { segment in
                 let on = model.hovered == segment
-                RingSegment(segment: segment)
-                    .fill(on ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.regularMaterial))
-                    .overlay(RingSegment(segment: segment).stroke(Color.primary.opacity(on ? 0 : 0.12), lineWidth: 1))
-                    .scaleEffect(on ? 1.045 : 1)
+                let shape = RingSegment(segment: segment)
+                // Liquid Glass (macOS 26): the desktop shows through, blurred and refracted.
+                // The hovered slice gets an accent tint instead of an opaque fill.
+                Color.clear
+                    .glassEffect(on ? .regular.tint(.accentColor.opacity(0.85)) : .regular, in: shape)
+                    .overlay(shape.stroke(Color.white.opacity(on ? 0.35 : 0.18), lineWidth: 0.75))
+                    .scaleEffect(on ? 1.03 : 1)
                 SegmentLabel(segment: segment, on: on)
                     .position(labelPoint(for: segment))
+                    .allowsHitTesting(false)
             }
             centre
         }
         .frame(width: WheelGeometry.size, height: WheelGeometry.size)
-        .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
+        .shadow(color: .black.opacity(0.18), radius: 12, y: 5)
         .scaleEffect(model.shown ? 1 : 0.82)
         .opacity(model.shown ? 1 : 0)
         .animation(.spring(duration: 0.22, bounce: 0.3), value: model.shown)
-        .animation(.easeOut(duration: 0.12), value: model.hovered)
+        // Critically damped (no bounce), so switching segments glides instead of wobbling.
+        .animation(.smooth(duration: 0.16), value: model.hovered)
     }
 
     private var centre: some View {
@@ -47,11 +52,12 @@ struct WheelView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
+                .contentTransition(.opacity)
         }
         .frame(width: WheelGeometry.innerRadius * 2 - 12)
         .frame(width: WheelGeometry.innerRadius * 2 - 6, height: WheelGeometry.innerRadius * 2 - 6)
-        .background(.regularMaterial, in: Circle())
-        .overlay(Circle().stroke(Color.primary.opacity(0.12), lineWidth: 1))
+        .glassEffect(.regular, in: Circle())
+        .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 0.75))
     }
 
     private func labelPoint(for segment: WheelSegment) -> CGPoint {
@@ -74,7 +80,7 @@ private struct SegmentLabel: View {
                 .font(.system(size: 12, weight: .semibold))
         }
         .foregroundStyle(on ? Color.white : Color.primary)
-        .scaleEffect(on ? 1.08 : 1)
+        // No scaling here: rescaling text every hover change made the labels shimmer.
     }
 }
 

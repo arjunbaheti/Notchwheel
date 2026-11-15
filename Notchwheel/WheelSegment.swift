@@ -72,6 +72,24 @@ enum WheelGeometry {
         return WheelSegment(rawValue: Int(shifted / sweep) % WheelSegment.allCases.count)
     }
 
+    /// How far past a segment's edge the cursor can wander before the highlight lets go. Without
+    /// this, a cursor resting on a boundary flips the highlight on and off and the wheel twitches.
+    static let angleHysteresis = 6.0          // degrees
+    static let radiusHysteresis: CGFloat = 8  // points
+
+    /// Like `segment(at:)`, but keeps `current` while the cursor is still near it.
+    static func segment(at point: CGPoint, keeping current: WheelSegment?) -> WheelSegment? {
+        guard let current else { return segment(at: point) }
+        let distance = hypot(point.x, point.y)
+        if distance >= innerRadius - radiusHysteresis, distance <= outerRadius + radiusHysteresis {
+            let fromTop = (90 - atan2(point.y, point.x) * 180 / .pi + 360).truncatingRemainder(dividingBy: 360)
+            var offset = abs(fromTop - Double(current.rawValue) * sweep)
+            if offset > 180 { offset = 360 - offset }
+            if offset <= sweep / 2 + angleHysteresis { return current }
+        }
+        return segment(at: point)
+    }
+
     /// Centre angle of a segment in screen-drawing terms: degrees clockwise from 3 o'clock with y
     /// pointing DOWN (SwiftUI coordinates).
     static func drawingAngle(of segment: WheelSegment) -> Double {

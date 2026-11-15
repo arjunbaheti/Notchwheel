@@ -26,16 +26,16 @@ final class WheelPanel: NSPanel {
         isReleasedWhenClosed = false
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
 
-        let container = NSView(frame: frame)
+        // The drop target is the panel's root view and the SwiftUI drawing sits inside it. Its
+        // hitTest claims every point, so nothing SwiftUI adds (Liquid Glass inserts views of its
+        // own) can end up between the cursor and the drop target.
+        let target = WheelDropTarget(frame: frame, model: model, onDrop: onDrop)
         let wheel = NSHostingView(rootView: WheelView(model: model))
         wheel.frame = frame
         wheel.autoresizingMask = [.width, .height]
-        container.addSubview(wheel)
-        // On top of the SwiftUI view so it is the one that receives the drag.
-        let target = WheelDropTarget(frame: frame, model: model, onDrop: onDrop)
-        target.autoresizingMask = [.width, .height]
-        container.addSubview(target)
-        contentView = container
+        wheel.unregisterDraggedTypes()
+        target.addSubview(wheel)
+        contentView = target
     }
 
     override var canBecomeKey: Bool { false }
@@ -81,9 +81,11 @@ private final class WheelDropTarget: NSView {
 
     required init?(coder: NSCoder) { fatalError("not used") }
 
+    /// Sticky: stays on the highlighted segment until the cursor is clearly elsewhere, and the drop
+    /// uses the same answer, so what's highlighted is always what you get.
     private func segment(for sender: NSDraggingInfo) -> WheelSegment? {
         let p = convert(sender.draggingLocation, from: nil)   // y-up, non-flipped view
-        return WheelGeometry.segment(at: CGPoint(x: p.x - bounds.midX, y: p.y - bounds.midY))
+        return WheelGeometry.segment(at: CGPoint(x: p.x - bounds.midX, y: p.y - bounds.midY), keeping: model.hovered)
     }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { update(sender) }

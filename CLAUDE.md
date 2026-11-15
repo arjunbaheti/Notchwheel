@@ -32,3 +32,15 @@ technical approach and the milestone plan. Don't build P1/P2 items unless asked.
 - [x] Milestone 3: image engine — `FileAction` + `ImageEngine` (ImageIO), `BatchRunner`; tests in `ImageEngineTests`; results shown in the menu bar menu until the pill exists
 - [x] Milestone 4: notch pill — `NotchPill.swift` (panel above the menu bar, centred on the notch via `auxiliaryTopLeft/RightArea`; top-centre fallback); geometry tests in `NotchPillTests`
 - [ ] Milestone 5: polish and package
+
+## In progress (15 Nov 2026, untested)
+
+Wheel polish after Milestone 4, committed but **not yet confirmed by the user**:
+- Sticky hover (hysteresis) to stop the highlight twitching on segment boundaries: `WheelGeometry.segment(at:keeping:)`.
+- Liquid Glass look on the wheel (`glassEffect` in `WheelView.swift`).
+- After adding glass, drops/highlighting stopped working entirely. Suspected cause: glass views
+  intercepting the drag. Fix applied: `WheelDropTarget` is now the panel's root view with a
+  catch-all `hitTest`, SwiftUI hosted inside it. First thing next session: user tests ⌘R; if
+  highlighting still fails, remove `glassEffect` to confirm the cause.
+- Watch for stale debug instances: an old build left running put a second drop panel on top
+  (`pgrep -lf Notchwheel.app`).
