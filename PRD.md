@@ -113,7 +113,7 @@ The app keeps a local log (date, action, file count, MB in, MB out). Review it a
 
 ## Open questions
 
-- [ ] Does a panel shown mid-drag reliably receive Finder's drop? Blocking; answered by Milestone 1.
-- [ ] Which permission does the global drag monitor need on your macOS version? Blocking; answered by Milestone 1.
+- [x] Does a panel shown mid-drag reliably receive Finder's drop? **Yes** (Milestone 1, Nov 15 2026).
+- [x] Which permission does the global drag monitor need on your macOS version? **None**: the spike polls `NSEvent.pressedMouseButtons`, `NSEvent.modifierFlags` and the drag pasteboard instead of using a global event monitor (Milestone 1).
 - [ ] Can ImageIO write WebP on macOS 14? If yes, add a "→ WebP" segment in P1.
 - [ ] Is 2048 px the right Resize preset, or do your uploads need something smaller?
