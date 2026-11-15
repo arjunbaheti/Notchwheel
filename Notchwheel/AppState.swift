@@ -1,17 +1,18 @@
 //
-//  SpikeState.swift
+//  AppState.swift
 //  Notchwheel
 //
-//  Shared state for the Milestone 1 spike, shown in the menu bar menu.
+//  State shown in the menu bar menu.
 //
 
 import Foundation
 import Observation
 
 @Observable
-final class SpikeState {
+final class AppState {
     struct Drop {
         let date: Date
+        let segment: WheelSegment
         let urls: [URL]
     }
 

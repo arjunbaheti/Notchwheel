@@ -28,7 +28,7 @@ technical approach and the milestone plan. Don't build P1/P2 items unless asked.
 ## Status
 
 - [x] Milestone 1: spike the gesture — drop from a mid-drag panel works; no permissions needed (polling, see `DragWatcher.swift`)
-- [ ] Milestone 2: wheel UI
+- [x] Milestone 2: wheel UI — five segments, hover highlight, centre-hole/outside cancel; hit-test tests in `NotchwheelTests`
 - [ ] Milestone 3: image engine
 - [ ] Milestone 4: notch pill
 - [ ] Milestone 5: polish and package

@@ -20,7 +20,7 @@ struct NotchwheelApp: App {
 
 /// Starts the drag watcher once the app has launched.
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    let state = SpikeState()
+    let state = AppState()
     private var watcher: DragWatcher?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -30,15 +30,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-/// What the menu bar menu shows. Milestone 1 only: proves the drop landed.
+/// What the menu bar menu shows. For now: the last drop, so a test can confirm the right segment.
 struct MenuContent: View {
-    var state: SpikeState
+    var state: AppState
 
     var body: some View {
         Text(state.watching ? "Hold ⌥ while dragging files" : "Starting…")
         if let drop = state.lastDrop {
             Divider()
-            Text("Drop #\(state.dropCount): \(drop.urls.count) file\(drop.urls.count == 1 ? "" : "s") at \(drop.date.formatted(date: .omitted, time: .standard))")
+            Text("Drop #\(state.dropCount): \(drop.segment.title) · \(drop.urls.count) file\(drop.urls.count == 1 ? "" : "s") at \(drop.date.formatted(date: .omitted, time: .standard))")
             ForEach(drop.urls.prefix(5), id: \.self) { url in
                 Text(url.lastPathComponent)
             }

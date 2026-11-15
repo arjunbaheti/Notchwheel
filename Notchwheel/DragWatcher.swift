@@ -2,8 +2,8 @@
 //  DragWatcher.swift
 //  Notchwheel
 //
-//  Notices when the user is dragging files anywhere on screen with ⌥ held, and shows the drop
-//  panel under the cursor (PRD P0-1).
+//  Notices when the user is dragging files anywhere on screen with ⌥ held, and shows the wheel
+//  under the cursor (PRD P0-1).
 //
 //  It polls global input state 60 times a second instead of using a global NSEvent monitor:
 //  NSEvent.pressedMouseButtons, NSEvent.modifierFlags and the system drag pasteboard can all be
@@ -14,14 +14,14 @@
 import AppKit
 import os
 
-let spikeLog = Logger(subsystem: "com.arjunbaheti.Notchwheel", category: "spike")
+let appLog = Logger(subsystem: "com.arjunbaheti.Notchwheel", category: "app")
 
 final class DragWatcher {
     /// ⌥ must be held this long during a file drag before the panel appears (PRD P0-1).
     private let holdDelay: TimeInterval = 0.15
 
-    private let state: SpikeState
-    private let panel: DropPanel
+    private let state: AppState
+    private let panel: WheelPanel
     private let dragPasteboard = NSPasteboard(name: .drag)
     private var timer: Timer?
 
@@ -32,13 +32,14 @@ final class DragWatcher {
     private var checkedChangeCount = -1
     private var dragHasFiles = false
 
-    init(state: SpikeState) {
+    init(state: AppState) {
         self.state = state
-        self.panel = DropPanel { urls in
+        self.panel = WheelPanel { segment, urls in
+            // Milestone 2: record the choice. Milestone 3 hands it to the image engine.
             state.dropCount += 1
-            state.lastDrop = .init(date: Date(), urls: urls)
-            spikeLog.notice("Dropped \(urls.count) file(s): \(urls.map(\.path).joined(separator: ", "), privacy: .public)")
-            print("Notchwheel drop #\(state.dropCount):")
+            state.lastDrop = .init(date: Date(), segment: segment, urls: urls)
+            appLog.notice("\(segment.title, privacy: .public): \(urls.count) file(s): \(urls.map(\.path).joined(separator: ", "), privacy: .public)")
+            print("Notchwheel drop #\(state.dropCount) on \(segment.title):")
             urls.forEach { print("  \($0.path)") }
             NSSound(named: "Pop")?.play()
         }
@@ -52,7 +53,7 @@ final class DragWatcher {
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
         state.watching = true
-        spikeLog.notice("Drag watcher started")
+        appLog.notice("Drag watcher started")
     }
 
     private func tick() {
@@ -80,13 +81,17 @@ final class DragWatcher {
             let since = optionHeldSince ?? Date()
             optionHeldSince = since
             if !panel.isVisible && Date().timeIntervalSince(since) >= holdDelay {
-                panel.show(centredOn: NSEvent.mouseLocation)
+                panel.show(centredOn: NSEvent.mouseLocation, fileCount: draggedFileCount())
             }
         } else {
             optionHeldSince = nil
             // Letting go of ⌥ mid-drag cancels: the panel hides and the drag carries on (P0-2).
             if panel.isVisible && !optionHeld { panel.hide() }
         }
+    }
+
+    private func draggedFileCount() -> Int {
+        (dragPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) ?? []).count
     }
 
     private func currentDragHasFiles() -> Bool {
