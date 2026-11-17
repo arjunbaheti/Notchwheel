@@ -25,6 +25,10 @@ final class WheelPanel: NSPanel {
         hidesOnDeactivate = false          // we're never the active app
         isReleasedWhenClosed = false
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        // By default the window server sends events (and drags) through pixels it thinks are
+        // transparent. Liquid Glass is composited outside our backing store, so the whole wheel
+        // looked transparent and drops fell through to Finder (which, with ⌥ held, copies the file).
+        ignoresMouseEvents = false
 
         // The drop target is the panel's root view and the SwiftUI drawing sits inside it. Its
         // hitTest claims every point, so nothing SwiftUI adds (Liquid Glass inserts views of its
@@ -80,6 +84,19 @@ private final class WheelDropTarget: NSView {
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
+
+    /// Claim every point so no SwiftUI/glass subview can become the drag destination instead.
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        frame.contains(point) ? self : nil
+    }
+
+    /// A nearly invisible disc under the wheel, so the window has real (non-zero alpha) pixels
+    /// wherever the wheel is and the window server routes the drag here, not to the window below.
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.black.withAlphaComponent(0.01).setFill()
+        let r = WheelGeometry.outerRadius + WheelGeometry.radiusHysteresis
+        NSBezierPath(ovalIn: NSRect(x: bounds.midX - r, y: bounds.midY - r, width: r * 2, height: r * 2)).fill()
+    }
 
     /// Sticky: stays on the highlighted segment until the cursor is clearly elsewhere, and the drop
     /// uses the same answer, so what's highlighted is always what you get.

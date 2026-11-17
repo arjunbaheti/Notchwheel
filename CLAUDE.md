@@ -42,5 +42,11 @@ Wheel polish after Milestone 4, committed but **not yet confirmed by the user**:
   intercepting the drag. Fix applied: `WheelDropTarget` is now the panel's root view with a
   catch-all `hitTest`, SwiftUI hosted inside it. First thing next session: user tests ⌘R; if
   highlighting still fails, remove `glassEffect` to confirm the cause.
+- 18 Nov test: still no highlight, and dropping duplicated the file. Diagnosis: the drop fell
+  through the panel to Finder (⌥-drop in Finder = copy). Glass is composited outside the window's
+  backing store, so the window server saw transparent pixels and routed the drag past us. (Also
+  the "catch-all hitTest" above had never actually been written.) Fix: `ignoresMouseEvents = false`
+  on the panel, `hitTest` override on `WheelDropTarget`, and a 1%-alpha disc drawn under the wheel.
+  Awaiting user test.
 - Watch for stale debug instances: an old build left running put a second drop panel on top
   (`pgrep -lf Notchwheel.app`).
