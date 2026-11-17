@@ -107,7 +107,7 @@ struct ImageEngineTests {
     @Test func compressTurnsHEICIntoSmallerJPGWithoutLocation() async throws {
         let f = try Fixtures()
         let photo = try f.write("photo.heic", type: .heic, width: 4032, height: 3024, gps: true)
-        let result = await BatchRunner.run(WheelSegment.compress.action, on: [photo])
+        let result = await BatchRunner.run(WheelSegment.compress.action!, on: [photo])
 
         #expect(result.outputs.map(\.lastPathComponent) == ["photo-compressed.jpg"])
         let out = ImageInfo(try #require(result.outputs.first))
@@ -121,7 +121,7 @@ struct ImageEngineTests {
     @Test func compressNeverUpscalesSmallImages() async throws {
         let f = try Fixtures()
         let small = try f.write("small.png", type: .png, width: 800, height: 600)
-        let result = await BatchRunner.run(WheelSegment.compress.action, on: [small])
+        let result = await BatchRunner.run(WheelSegment.compress.action!, on: [small])
         let out = ImageInfo(try #require(result.outputs.first))
         #expect(out.width == 800 && out.height == 600)
     }
@@ -132,15 +132,15 @@ struct ImageEngineTests {
         let png = try f.write("b.png", type: .png, width: 600, height: 400, alpha: true)
         let jpg = try f.write("c.jpg", type: .jpeg, width: 600, height: 400)
 
-        let toJPG = await BatchRunner.run(WheelSegment.toJPG.action, on: [heic, png])
+        let toJPG = await BatchRunner.run(WheelSegment.toJPG.action!, on: [heic, png])
         #expect(Set(toJPG.outputs.map(\.lastPathComponent)) == ["a.jpg", "b.jpg"])
         #expect(toJPG.outputs.allSatisfy { ImageInfo($0).type == .jpeg })
 
-        let toPNG = await BatchRunner.run(WheelSegment.toPNG.action, on: [jpg])
+        let toPNG = await BatchRunner.run(WheelSegment.toPNG.action!, on: [jpg])
         #expect(toPNG.outputs.map(\.lastPathComponent) == ["c.png"])
         #expect(ImageInfo(try #require(toPNG.outputs.first)).type == .png)
 
-        let toHEIC = await BatchRunner.run(WheelSegment.toHEIC.action, on: [jpg])
+        let toHEIC = await BatchRunner.run(WheelSegment.toHEIC.action!, on: [jpg])
         #expect(toHEIC.outputs.map(\.lastPathComponent) == ["c.heic"])
         #expect(ImageInfo(try #require(toHEIC.outputs.first)).type == .heic)
     }
@@ -148,7 +148,7 @@ struct ImageEngineTests {
     @Test func readsWebP() async throws {
         let f = try Fixtures()
         let webp = try f.webp("sticker.webp")
-        let result = await BatchRunner.run(WheelSegment.toPNG.action, on: [webp])
+        let result = await BatchRunner.run(WheelSegment.toPNG.action!, on: [webp])
         #expect(result.failures.isEmpty && result.skipped.isEmpty)
         let out = ImageInfo(try #require(result.outputs.first))
         #expect(out.type == .png && out.width == 1 && out.height == 1)
@@ -157,7 +157,7 @@ struct ImageEngineTests {
     @Test func resizeKeepsFormatAndCapsLongestEdge() async throws {
         let f = try Fixtures()
         let wide = try f.write("wide.png", type: .png, width: 3000, height: 1000)
-        let result = await BatchRunner.run(WheelSegment.resize.action, on: [wide])
+        let result = await BatchRunner.run(WheelSegment.resize.action!, on: [wide])
         #expect(result.outputs.map(\.lastPathComponent) == ["wide-resized.png"])
         let out = ImageInfo(try #require(result.outputs.first))
         #expect(out.type == .png && out.width == 2048 && out.height == 683)
@@ -167,7 +167,7 @@ struct ImageEngineTests {
         let f = try Fixtures()
         // Stored landscape with orientation 6 ("rotate 90° to display"), so it displays portrait.
         let rotated = try f.write("rotated.jpg", type: .jpeg, width: 400, height: 200, orientation: 6)
-        let result = await BatchRunner.run(WheelSegment.toPNG.action, on: [rotated])
+        let result = await BatchRunner.run(WheelSegment.toPNG.action!, on: [rotated])
         let out = ImageInfo(try #require(result.outputs.first))
         #expect(out.width == 200 && out.height == 400)
         #expect(out.orientation == 1)
@@ -176,7 +176,7 @@ struct ImageEngineTests {
     @Test func tenIPhonePhotosCompressInUnderThreeSeconds() async throws {
         let f = try Fixtures()
         let photos = try (1...10).map { try f.write("IMG_\($0).heic", type: .heic, width: 4032, height: 3024, gps: true) }
-        let result = await BatchRunner.run(WheelSegment.compress.action, on: photos)
+        let result = await BatchRunner.run(WheelSegment.compress.action!, on: photos)
         #expect(result.outputs.count == 10)
         #expect(result.seconds < 3, "took \(result.seconds) s")
     }
@@ -189,13 +189,13 @@ struct ImageEngineTests {
         let original = try Data(contentsOf: jpg)
 
         // → JPG on a JPG would be "photo.jpg", which is the original: it must become photo-2.jpg.
-        let same = await BatchRunner.run(WheelSegment.toJPG.action, on: [jpg])
+        let same = await BatchRunner.run(WheelSegment.toJPG.action!, on: [jpg])
         #expect(same.outputs.map(\.lastPathComponent) == ["photo-2.jpg"])
         #expect(try Data(contentsOf: jpg) == original)
 
         // Compressing twice gives -compressed and -compressed-2.
-        _ = await BatchRunner.run(WheelSegment.compress.action, on: [jpg])
-        _ = await BatchRunner.run(WheelSegment.compress.action, on: [jpg])
+        _ = await BatchRunner.run(WheelSegment.compress.action!, on: [jpg])
+        _ = await BatchRunner.run(WheelSegment.compress.action!, on: [jpg])
         #expect(try f.names() == ["photo-2.jpg", "photo-compressed-2.jpg", "photo-compressed.jpg", "photo.jpg"])
         #expect(try Data(contentsOf: jpg) == original)
     }
@@ -203,7 +203,7 @@ struct ImageEngineTests {
     @Test func leavesNoTemporaryFilesBehind() async throws {
         let f = try Fixtures()
         let png = try f.write("a.png", type: .png, width: 200, height: 200)
-        _ = await BatchRunner.run(WheelSegment.toHEIC.action, on: [png])
+        _ = await BatchRunner.run(WheelSegment.toHEIC.action!, on: [png])
         #expect(try f.names() == ["a.heic", "a.png"])
     }
 
@@ -217,7 +217,7 @@ struct ImageEngineTests {
         let folder = f.folder.appendingPathComponent("Album")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false)
 
-        let result = await BatchRunner.run(WheelSegment.compress.action, on: [photo, notes, doc, folder])
+        let result = await BatchRunner.run(WheelSegment.compress.action!, on: [photo, notes, doc, folder])
         #expect(result.outputs.count == 1)
         #expect(result.skipped.count == 3)
         #expect(result.failures.isEmpty)

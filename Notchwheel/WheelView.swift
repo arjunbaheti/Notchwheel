@@ -23,9 +23,11 @@ struct WheelView: View {
                 let on = model.hovered == segment
                 let shape = RingSegment(segment: segment)
                 // Liquid Glass (macOS 26): the desktop shows through, blurred and refracted.
-                // The hovered slice gets an accent tint instead of an opaque fill.
+                // The hovered slice gets a solid accent fill on top: a glass tint alone read as
+                // a texture change, not a clear blue highlight.
                 Color.clear
-                    .glassEffect(on ? .regular.tint(.accentColor.opacity(0.85)) : .regular, in: shape)
+                    .glassEffect(.regular, in: shape)
+                    .overlay(shape.fill(Color.accentColor).opacity(on ? 1 : 0))
                     .overlay(shape.stroke(Color.white.opacity(on ? 0.35 : 0.18), lineWidth: 0.75))
                     .scaleEffect(on ? 1.03 : 1)
                 SegmentLabel(segment: segment, on: on)

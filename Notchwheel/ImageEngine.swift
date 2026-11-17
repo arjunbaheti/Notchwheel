@@ -174,9 +174,12 @@ nonisolated extension CGImage {
 }
 
 extension WheelSegment {
-    /// The PRD P0-3 / P0-4 presets for each segment.
-    var action: any FileAction {
+    /// The PRD P0-3 / P0-4 presets for each image segment. Nil for PDF, which combines the whole
+    /// drop into one file instead of converting files one by one (see PDFMaker).
+    var action: (any FileAction)? {
         switch self {
+        case .toPDF:
+            nil
         case .compress:
             ImageAction(name: "Compress", format: .jpeg(quality: 0.75), maxPixelSize: 2560, stripMetadata: true, suffix: "compressed")
         case .toJPG:
@@ -188,5 +191,10 @@ extension WheelSegment {
         case .resize:
             ImageAction(name: "Resize", format: nil, maxPixelSize: 2048, stripMetadata: false, suffix: "resized")
         }
+    }
+
+    /// Runs this segment on a drop, off the main thread.
+    func run(on urls: [URL]) async -> BatchResult {
+        if let action { await BatchRunner.run(action, on: urls) } else { await PDFMaker.combine(urls) }
     }
 }

@@ -2,13 +2,13 @@
 //  WheelSegment.swift
 //  Notchwheel
 //
-//  The five actions on the wheel (PRD P0-3) and the geometry shared by drawing and hit-testing.
+//  The six actions on the wheel (PRD P0-3, plus PDF) and the geometry shared by drawing and hit-testing.
 //
 
 import Foundation
 
 enum WheelSegment: Int, CaseIterable, Identifiable {
-    case compress, toJPG, toPNG, toHEIC, resize
+    case compress, toJPG, toPNG, toHEIC, resize, toPDF
 
     var id: Int { rawValue }
 
@@ -19,6 +19,7 @@ enum WheelSegment: Int, CaseIterable, Identifiable {
         case .toPNG: "PNG"
         case .toHEIC: "HEIC"
         case .resize: "Resize"
+        case .toPDF: "PDF"
         }
     }
 
@@ -29,6 +30,7 @@ enum WheelSegment: Int, CaseIterable, Identifiable {
         case .toPNG: "p.square"
         case .toHEIC: "h.square"
         case .resize: "aspectratio"
+        case .toPDF: "doc.richtext"
         }
     }
 
@@ -39,6 +41,7 @@ enum WheelSegment: Int, CaseIterable, Identifiable {
         case .compress: return "Compressing \(files)…"
         case .toJPG, .toPNG, .toHEIC: return "Converting \(files) to \(title)…"
         case .resize: return "Resizing \(files)…"
+        case .toPDF: return "Making a PDF from \(files)…"
         }
     }
 
@@ -50,6 +53,7 @@ enum WheelSegment: Int, CaseIterable, Identifiable {
         case .toPNG: "Convert to PNG"
         case .toHEIC: "Convert to HEIC"
         case .resize: "Longest edge 2048 px"
+        case .toPDF: "Combine into one PDF"
         }
     }
 }

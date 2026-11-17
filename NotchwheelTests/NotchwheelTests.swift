@@ -30,8 +30,9 @@ struct WheelGeometryTests {
 
     @Test func topIsCompressAndUpperRightIsJPG() {
         #expect(WheelGeometry.segment(at: CGPoint(x: 0, y: mid)) == .compress)
-        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 72)) == .toJPG)
-        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 288)) == .resize)
+        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 60)) == .toJPG)
+        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 240)) == .resize)
+        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 300)) == .toPDF)
     }
 
     @Test func boundariesFallOnTheRightSide() {
@@ -39,7 +40,7 @@ struct WheelGeometryTests {
         #expect(WheelGeometry.segment(at: point(clockwiseFromTop: half - 0.5)) == .compress)
         #expect(WheelGeometry.segment(at: point(clockwiseFromTop: half + 0.5)) == .toJPG)
         #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 360 - half + 0.5)) == .compress)
-        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 360 - half - 0.5)) == .resize)
+        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 360 - half - 0.5)) == .toPDF)   // last segment
     }
 
     @Test func centreHoleAndOutsideAreNotTargets() {
@@ -48,14 +49,15 @@ struct WheelGeometryTests {
         #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 10, radius: WheelGeometry.outerRadius + 1)) == nil)
     }
 
-    /// Compress spans -36°…36°. Resting just past its edge must not flip the highlight back and forth.
+    /// Compress spans -half…half. Resting just past its edge must not flip the highlight back and forth.
     @Test func highlightIsStickyNearBoundaries() {
-        let justPastEdge = point(clockwiseFromTop: 39)            // 3° into JPG
+        let half = WheelGeometry.sweep / 2
+        let justPastEdge = point(clockwiseFromTop: half + 3)      // 3° into JPG
         #expect(WheelGeometry.segment(at: justPastEdge) == .toJPG)
         #expect(WheelGeometry.segment(at: justPastEdge, keeping: .compress) == .compress)
-        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 50), keeping: .compress) == .toJPG)
+        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: half + 14), keeping: .compress) == .toJPG)
         // Wrap-around: Compress also stays highlighted just past its left edge.
-        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 320), keeping: .compress) == .compress)
+        #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 360 - half - 3), keeping: .compress) == .compress)
         // Radially: a little outside the ring keeps it, well outside lets go.
         let edge = WheelGeometry.outerRadius
         #expect(WheelGeometry.segment(at: point(clockwiseFromTop: 0, radius: edge + 4), keeping: .compress) == .compress)

@@ -40,9 +40,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         state.working = true
         pill.showWorking(segment.progressText(fileCount: urls.count))
         appLog.notice("\(segment.title, privacy: .public): \(urls.count) file(s)")
-        let action = segment.action
         Task {
-            let result = await BatchRunner.run(action, on: urls)   // runs off the main thread
+            let result = await segment.run(on: urls)   // runs off the main thread
             state.working = false
             state.lastResult = result
             pill.showResult(result)
