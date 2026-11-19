@@ -25,6 +25,12 @@ technical approach and the milestone plan. Don't build P1/P2 items unless asked.
 - Claude can't see the screen: after each milestone the user describes the manual test result.
 - Keep actions behind the `FileAction` protocol so new engines slot into the wheel without UI changes.
 
+- Signing (19 Nov 2026): app targets sign with a self-made certificate "Arjun Local Code Signing" in the user's
+  login keychain (trusted for code signing only; created at the user's choice instead of an Apple ID). It gives a
+  stable designated requirement, so macOS keeps Calendar/Automation permissions across rebuilds; ad-hoc signing
+  made it re-ask after every build. If that identity is missing, builds fail: recreate it or switch the app target
+  back to CODE_SIGN_STYLE Automatic. Test targets stay ad-hoc.
+
 ## Status
 
 - [x] Milestone 1: spike the gesture — drop from a mid-drag panel works; no permissions needed (polling, see `DragWatcher.swift`)
