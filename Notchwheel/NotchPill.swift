@@ -52,6 +52,17 @@ final class PillModel {
     var notch = NotchGeometry.Notch(midX: 0, width: 0, height: 0, top: 0)
 }
 
+/// Tells other notch apps (Arjun's Notch) to step aside while the pill shows. System-wide
+/// distributed notifications: no permission needed, and harmless if nobody is listening.
+nonisolated enum NotchSignal {
+    static let pillWillShow = Notification.Name("com.arjunbaheti.Notchwheel.pillWillShow")
+    static let pillDidHide = Notification.Name("com.arjunbaheti.Notchwheel.pillDidHide")
+
+    static func post(_ name: Notification.Name) {
+        DistributedNotificationCenter.default().postNotificationName(name, object: nil, userInfo: nil, deliverImmediately: true)
+    }
+}
+
 final class NotchPill: NSPanel {
     private let model = PillModel()
     private var outputs: [URL] = []
@@ -105,6 +116,7 @@ final class NotchPill: NSPanel {
         ignoresMouseEvents = status == .working   // nothing to click yet; don't block the menu bar
 
         guard !isVisible else { return }
+        NotchSignal.post(NotchSignal.pillWillShow)
         let screen = Self.targetScreen()
         let notch = NotchGeometry.notch(
             screenFrame: screen.frame,
@@ -153,6 +165,7 @@ final class NotchPill: NSPanel {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
             guard let self, self.generation == current else { return }
             self.orderOut(nil)
+            NotchSignal.post(NotchSignal.pillDidHide)
         }
     }
 }
