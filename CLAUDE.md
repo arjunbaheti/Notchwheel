@@ -31,13 +31,21 @@ technical approach and the milestone plan. Don't build P1/P2 items unless asked.
 - [x] Milestone 2: wheel UI — five segments, hover highlight, centre-hole/outside cancel; hit-test tests in `NotchwheelTests`
 - [x] Milestone 3: image engine — `FileAction` + `ImageEngine` (ImageIO), `BatchRunner`; tests in `ImageEngineTests`; results shown in the menu bar menu until the pill exists
 - [x] Milestone 4: notch pill — `NotchPill.swift` (panel above the menu bar, centred on the notch via `auxiliaryTopLeft/RightArea`; top-centre fallback); geometry tests in `NotchPillTests`
-- [ ] Milestone 5: polish and package
+- [~] Milestone 5: polish and package — built 18 Nov 2026, gate (one week of daily use) pending. Launch at Login
+  (`LoginItem.swift`, SMAppService; only enabled when running from /Applications), "no permissions needed"
+  status line, local usage CSV (`UsageLog.swift`, ~/Library/Application Support/Notchwheel/usage.csv; tests in
+  `UsageLogTests`). Template UI tests removed (XCTest can't terminate an LSUIElement app).
+  Installed at /Applications/Notchwheel.app, ad-hoc signed (no Apple developer certificate on this Mac).
+  To reinstall after changes: quit Notchwheel, then
+  `xcodebuild -project Notchwheel.xcodeproj -scheme Notchwheel -configuration Release -derivedDataPath /tmp/nw-release build`
+  and `ditto /tmp/nw-release/Build/Products/Release/Notchwheel.app /Applications/Notchwheel.app`.
+  Don't run the Xcode build and the installed app at the same time: two wheels stack up.
+  The Xcode Debug build also shows up in Spotlight/Apps as a second "Notchwheel"; suggested fix is adding
+  ~/Library/Developer to Spotlight Search Privacy. User confirmed the installed app works (19 Nov).
 - [x] Extra (user request, 18 Nov 2026; PDF was P2 in the PRD): sixth "PDF" segment. `PDFMaker.swift` combines
   all dropped images into one PDF (filename order, A4 pages, landscape for landscape images, images capped at
   2480 px and embedded as JPEG 0.8). Many-in/one-out, so it bypasses `FileAction`; `WheelSegment.run(on:)`
   picks the engine and `WheelSegment.action` is nil for `.toPDF`. Tests in `PDFMakerTests`. Confirmed working by the user (18 Nov).
-- Known: the template UI test (`NotchwheelUITests.testExample`) fails because XCTest can't terminate the
-  menu bar app; run unit tests with `-only-testing:NotchwheelTests` until it's replaced or removed.
 
 ## Wheel polish after Milestone 4 (confirmed working by the user, 18 Nov 2026)
 

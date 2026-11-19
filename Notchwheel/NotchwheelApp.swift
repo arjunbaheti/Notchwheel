@@ -14,7 +14,7 @@ struct NotchwheelApp: App {
 
     var body: some Scene {
         MenuBarExtra("Notchwheel", systemImage: "circle.dashed") {
-            MenuContent(state: appDelegate.state)
+            MenuContent(state: appDelegate.state, loginItem: appDelegate.loginItem)
         }
     }
 }
@@ -23,6 +23,7 @@ struct NotchwheelApp: App {
 /// reporting progress and the result in the notch pill.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let state = AppState()
+    let loginItem = LoginItem()
     private var watcher: DragWatcher?
     private let pill = NotchPill()
 
@@ -45,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             state.working = false
             state.lastResult = result
             pill.showResult(result)
+            UsageLog.record(action: segment.title, files: urls.count, result: result)
             appLog.notice("\(result.summary, privacy: .public) in \(result.seconds, format: .fixed(precision: 2)) s")
             NSSound(named: result.outputs.isEmpty ? "Basso" : "Pop")?.play()
         }
@@ -54,9 +56,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 /// What the menu bar menu shows: the last result, as a backup to the notch pill.
 struct MenuContent: View {
     var state: AppState
+    var loginItem: LoginItem
 
     var body: some View {
         Text(state.watching ? "Hold ⌥ while dragging images" : "Starting…")
+        // PRD P0-8 permissions status. Drag detection polls input state that any app may read, so
+        // there is nothing to grant; this line says so instead of leaving you to wonder.
+        Text(state.watching ? "✓ Ready · no permissions needed" : "Drag watcher not running")
         if let drop = state.lastDrop {
             Divider()
             if state.working {
@@ -72,6 +78,23 @@ struct MenuContent: View {
                         NSWorkspace.shared.activateFileViewerSelecting(result.outputs)
                     }
                 }
+            }
+        }
+        Divider()
+        if loginItem.isInstalled {
+            Toggle("Launch at Login", isOn: Binding(get: { loginItem.enabled }, set: { loginItem.set($0) }))
+            if let note = loginItem.note { Text(note) }
+        } else {
+            // A copy run from Xcode lives in a build folder; macOS would launch that at login.
+            Toggle("Launch at Login", isOn: .constant(false)).disabled(true)
+            Text("Install in Applications to enable")
+        }
+        Button("Show Usage Log") {
+            let log = UsageLog.defaultURL
+            if FileManager.default.fileExists(atPath: log.path) {
+                NSWorkspace.shared.activateFileViewerSelecting([log])
+            } else {
+                NSWorkspace.shared.open(log.deletingLastPathComponent().deletingLastPathComponent())
             }
         }
         Divider()
